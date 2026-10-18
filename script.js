@@ -13,65 +13,87 @@ const resultErrors = document.getElementById("resultErrors");
 
 const timeOptions = document.querySelector(".time-options");
 const wordOptions = document.querySelector(".word-options");
-const modeButtons = document.querySelectorAll('[data-mode]');
-const timeButtons = document.querySelectorAll('[data-time]');
-const wordButtons = document.querySelectorAll('[data-words]');
+const modeButtons = document.querySelectorAll("[data-mode]");
+const timeButtons = document.querySelectorAll("[data-time]");
+const wordButtons = document.querySelectorAll("[data-words]");
 
-const words = [
-    "the", "quick", "brown", "fox", "jumps", "over", "the", "lazy",
-    "dog", "while", "the", "world", "moves", "around", "you", "every",
-    "day", "people", "learn", "new", "things", "when", "they", "practice",
-    "small", "steps", "can", "create", "great", "results", "typing",
-    "takes", "time", "but", "consistent", "practice", "makes", "you",
-    "faster", "and", "more", "accurate", "focus", "on", "each", "word",
-    "and", "keep", "your", "hands", "relaxed", "while", "you", "type"
+const wordBank = [
+    "about", "after", "again", "against", "almost", "always",
+    "around", "because", "before", "between", "better", "bring",
+    "change", "children", "different", "during", "every", "example",
+    "family", "first", "follow", "found", "great", "group", "important",
+    "inside", "keep", "large", "learn", "little", "making", "might",
+    "never", "number", "often", "place", "point", "problem", "program",
+    "question", "really", "right", "school", "second", "small", "something",
+    "still", "system", "their", "these", "think", "through", "together",
+    "under", "until", "using", "usually", "water", "where", "without",
+    "world", "would", "write", "young", "your", "quick", "brown", "fox",
+    "jumps", "over", "lazy", "dog", "typing", "practice", "focus",
+    "keyboard", "speed", "accuracy", "computer", "technology", "future"
 ];
 
 let selectedTime = 15;
 let selectedWordCount = 25;
 let currentMode = "time";
 
-let timeLeft = selectedTime;
 let timer = null;
+let timeLeft = selectedTime;
 let started = false;
 let finished = false;
+
+let currentPosition = 0;
 let totalTyped = 0;
 let correctTyped = 0;
 let errors = 0;
 
-function generateWords(count = selectedWordCount) {
+function generateText() {
     typingText.innerHTML = "";
 
+    const count = currentMode === "words"
+        ? selectedWordCount
+        : 120;
+
+    const selectedWords = [];
+
     for (let i = 0; i < count; i++) {
-        const word = words[Math.floor(Math.random() * words.length)];
+        const randomWord =
+            wordBank[Math.floor(Math.random() * wordBank.length)];
 
-        const wordElement = document.createElement("span");
-        wordElement.className = "word";
-
-        for (const character of word) {
-            const characterElement = document.createElement("span");
-            characterElement.textContent = character;
-            wordElement.appendChild(characterElement);
-        }
-
-        typingText.appendChild(wordElement);
+        selectedWords.push(randomWord);
     }
 
-    highlightCurrentCharacter();
+    const text = selectedWords.join(" ");
+
+    for (let i = 0; i < text.length; i++) {
+        const character = document.createElement("span");
+
+        character.className = "character";
+        character.textContent = text[i];
+
+        if (text[i] === " ") {
+            character.classList.add("space");
+        }
+
+        typingText.appendChild(character);
+    }
+
+    updateCaret();
 }
 
-function highlightCurrentCharacter() {
-    document.querySelectorAll(".typing-text span span").forEach(character => {
-        character.style.color = "";
-        character.style.background = "";
+function updateCaret() {
+    const characters = document.querySelectorAll(".character");
+
+    characters.forEach(character => {
+        character.classList.remove("current");
     });
 
-    const currentIndex = typingInput.value.length;
-    const characters = document.querySelectorAll(".typing-text span span");
+    if (characters[currentPosition]) {
+        characters[currentPosition].classList.add("current");
 
-    if (characters[currentIndex]) {
-        characters[currentIndex].style.color = "#e2b714";
-        characters[currentIndex].style.background = "rgba(226, 183, 20, 0.12)";
+        characters[currentPosition].scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+        });
     }
 }
 
@@ -91,69 +113,112 @@ function startTimer() {
     }, 1000);
 }
 
-function updateStats() {
-    const elapsedTime = Math.max(1, selectedTime - timeLeft);
-    const minutes = elapsedTime / 60;
+function handleInput(event) {
+    if (finished) return;
 
-    const wpm = minutes > 0
-        ? Math.round((correctTyped / 5) / minutes)
-        : 0;
+    if (!started) {
+        started = true;
+        startTimer();
+    }
+
+    const typedValue = typingInput.value;
+
+    const newCharacterCount = typedValue.length - currentPosition;
+
+    if (newCharacterCount <= 0) {
+        currentPosition = typedValue.length;
+        updateCaret();
+        return;
+    }
+
+    const typedCharacter =
+        typedValue[typedValue.length - 1];
+
+    const characters =
+        document.querySelectorAll(".character");
+
+    const targetCharacter =
+        characters[currentPosition];
+
+    if (!targetCharacter) {
+        finishTest();
+        return;
+    }
+
+    totalTyped++;
+
+    if (typedCharacter === targetCharacter.textContent) {
+        targetCharacter.classList.remove("incorrect");
+        targetCharacter.classList.add("correct");
+
+        correctTyped++;
+    } else {
+        targetCharacter.classList.remove("correct");
+        targetCharacter.classList.add("incorrect");
+
+        errors++;
+    }
+
+    currentPosition++;
+
+    updateCaret();
+    updateStats();
+
+    typingInput.value = "";
+}
+
+function handleBackspace(event) {
+    if (event.key !== "Backspace") return;
+
+    event.preventDefault();
+
+    if (currentPosition <= 0) return;
+
+    const characters =
+        document.querySelectorAll(".character");
+
+    currentPosition--;
+
+    const character = characters[currentPosition];
+
+    if (character.classList.contains("correct")) {
+        correctTyped--;
+    }
+
+    if (
+        character.classList.contains("correct") ||
+        character.classList.contains("incorrect")
+    ) {
+        totalTyped--;
+    }
+
+    if (character.classList.contains("incorrect")) {
+        errors--;
+    }
+
+    character.classList.remove("correct");
+    character.classList.remove("incorrect");
+
+    updateCaret();
+    updateStats();
+}
+
+function updateStats() {
+    const elapsedSeconds =
+        Math.max(1, selectedTime - timeLeft);
+
+    const minutes = elapsedSeconds / 60;
+
+    const wpm = Math.round(
+        (correctTyped / 5) / minutes
+    );
 
     const accuracy = totalTyped > 0
         ? Math.round((correctTyped / totalTyped) * 100)
         : 100;
 
-    wpmDisplay.textContent = wpm;
+    wpmDisplay.textContent = Math.max(0, wpm);
     accuracyDisplay.textContent = `${accuracy}%`;
-}
-
-function handleTyping() {
-    if (finished) return;
-
-    if (!started) {
-        started = true;
-
-        if (currentMode === "time") {
-            startTimer();
-        }
-    }
-
-    const input = typingInput.value;
-    const characters = document.querySelectorAll(".typing-text span span");
-
-    totalTyped = input.length;
-    correctTyped = 0;
-    errors = 0;
-
-    characters.forEach((character, index) => {
-        character.style.background = "";
-        character.style.color = "";
-
-        if (index < input.length) {
-            if (input[index] === character.textContent) {
-                character.style.color = "#e6e6e6";
-                correctTyped++;
-            } else {
-                character.style.color = "#e05252";
-                character.style.background = "rgba(224, 82, 82, 0.12)";
-                errors++;
-            }
-        }
-    });
-
-    if (currentMode === "words") {
-        const targetText = Array.from(characters)
-            .map(character => character.textContent)
-            .join("");
-
-        if (input.length >= targetText.length) {
-            finishTest();
-            return;
-        }
-    }
-
-    highlightCurrentCharacter();
-    updateStats();
 }
 
 function finishTest() {
@@ -166,12 +231,10 @@ function finishTest() {
 
     typingInput.blur();
 
-    const elapsedTime = Math.max(
-        1,
-        selectedTime - timeLeft
-    );
+    const elapsedSeconds =
+        Math.max(1, selectedTime - timeLeft);
 
-    const minutes = elapsedTime / 60;
+    const minutes = elapsedSeconds / 60;
 
     const finalWpm = Math.round(
         (correctTyped / 5) / minutes
@@ -181,7 +244,7 @@ function finishTest() {
         ? Math.round((correctTyped / totalTyped) * 100)
         : 100;
 
-    resultWpm.textContent = finalWpm;
+    resultWpm.textContent = Math.max(0, finalWpm);
     resultAccuracy.textContent = `${finalAccuracy}%`;
     resultCharacters.textContent = totalTyped;
     resultErrors.textContent = errors;
@@ -193,24 +256,25 @@ function resetTest() {
     clearInterval(timer);
 
     timer = null;
+    timeLeft = selectedTime;
+
     started = false;
     finished = false;
 
+    currentPosition = 0;
     totalTyped = 0;
     correctTyped = 0;
     errors = 0;
 
-    timeLeft = selectedTime;
+    typingInput.value = "";
 
     timerDisplay.textContent = selectedTime;
     wpmDisplay.textContent = "0";
     accuracyDisplay.textContent = "100%";
 
-    typingInput.value = "";
-
     result.classList.add("hidden");
 
-    generateWords();
+    generateText();
 
     typingInput.focus();
 }
@@ -261,20 +325,30 @@ wordButtons.forEach(button => {
     });
 });
 
-typingInput.addEventListener("input", handleTyping);
+typingInput.addEventListener("input", handleInput);
+
+typingInput.addEventListener("keydown", handleBackspace);
 
 typingText.addEventListener("click", () => {
     typingInput.focus();
 });
 
 document.addEventListener("keydown", event => {
+    if (
+        event.key.length === 1 ||
+        event.key === "Backspace"
+    ) {
+        typingInput.focus();
+    }
+
     if (event.key === "Tab") {
         event.preventDefault();
     }
 });
 
 restartButton.addEventListener("click", resetTest);
+
 tryAgainButton.addEventListener("click", resetTest);
 
-generateWords();
+generateText();
 typingInput.focus();
