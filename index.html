@@ -3,9 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>TypeFlow</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
+
+    <header class="header">
+        <div class="logo">TypeFlow</div>
+
+        <nav class="nav">
+            <a href="#" class="nav-link active">Test</a>
+            <a href="#" class="nav-link">Stats</a>
+            <a href="#" class="nav-link">Themes</a>
+        </nav>
+
+        <div class="header-actions">
+            <button class="icon-button" id="settingsButton" aria-label="Settings">⚙</button>
+            <button class="icon-button" id="accountButton" aria-label="Account">◯</button>
+        </div>
+    </header>
+
+    <main class="main">
+
+        <section class="test-controls">
+            <div class="control-group">
+                <button class="control active" data-mode="time">Time</button>
+                <button class="control" data-mode="words">Words</button>
+            </div>
+
+            <div class="control-group time-options">
+                <button class="control active" data-time="15">15</button>
+                <button class="control" data-time="30">30</button>
+                <button class="control" data-time="60">60</button>
+                <button class="control" data-time="120">120</button>
+            </div>
+
+            <div class="control-group word-options hidden">
+                <button class="control" data-words="10">10</button>
+                <button class="control" data-words="25">25</button>
+                <button class="control" data-words="50">50</button>
+                <button class="control" data-words="100">100</button>
+            </div>
+        </section>
+
+        <section class="stats">
+            <div class="stat">
+                <span class="stat-label">WPM</span>
+                <span class="stat-value" id="wpm">0</span>
+            </div>
+
+            <div class="stat">
+                <span class="stat-label">Accuracy</span>
+                <span class="stat-value" id="accuracy">100%</span>
+            </div>
+
+            <div class="stat">
+                <span class="stat-label">Time</span>
+                <span class="stat-value" id="timer">15</span>
+            </div>
+        </section>
+
+        <section class="typing-container" id="typingContainer">
+
+            <div class="typing-text" id="typingText">
+                <span class="word">the</span>
+                <span class="word">quick</span>
+                <span class="word">brown</span>
+                <span class="word">fox</span>
+                <span class="word">jumps</span>
+                <span class="word">over</span>
+                <span class="word">the</span>
+                <span class="word">lazy</span>
+                <span class="word">dog</span>
+                <span class="word">while</span>
+                <span class="word">the</span>
+                <span class="word">world</span>
+                <span class="word">moves</span>
+                <span class="word">around</span>
+                <span class="word">you</span>
+            </div>
+
+            <input
+                type="text"
+                id="typingInput"
+                class="typing-input"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                autofocus
+            >
+
+        </section>
+
+        <button class="restart-button" id="restartButton">
+            Restart
+        </button>
+
+        <section class="result hidden" id="result">
+
+            <h2>Test Complete</h2>
+
+            <div class="result-grid">
+
+                <div class="result-card">
+                    <span>WPM</span>
+                    <strong id="resultWpm">0</strong>
+                </div>
+
+                <div class="result-card">
+                    <span>Accuracy</span>
+                    <strong id="resultAccuracy">0%</strong>
+                </div>
+
+                <div class="result-card">
+                    <span>Characters</span>
+                    <strong id="resultCharacters">0</strong>
+                </div>
+
+                <div class="result-card">
+                    <span>Errors</span>
+                    <strong id="resultErrors">0</strong>
+                </div>
+
+            </div>
+
+            <button class="try-again" id="tryAgainButton">
+                Try Again
+            </button>
+
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <span>TypeFlow</span>
+        <span>Practice. Improve. Master.</span>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
