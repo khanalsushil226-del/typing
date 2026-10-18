@@ -37,11 +37,15 @@ let selectedWordCount = 25;
 let currentMode = "time";
 
 let timer = null;
-let timeLeft = selectedTime;
+let startTime = null;
+let elapsedSeconds = 0;
+
 let started = false;
 let finished = false;
 
-let currentPosition = 0;
+let targetText = "";
+let typedText = "";
+
 let totalTyped = 0;
 let correctTyped = 0;
 let errors = 0;
@@ -56,158 +60,166 @@ function generateText() {
     const selectedWords = [];
 
     for (let i = 0; i < count; i++) {
-        const randomWord =
-            wordBank[Math.floor(Math.random() * wordBank.length)];
-
-        selectedWords.push(randomWord);
+        const randomIndex = Math.floor(Math.random() * wordBank.length);
+        selectedWords.push(wordBank[randomIndex]);
     }
 
-    const text = selectedWords.join(" ");
+    targetText = selectedWords.join(" ");
+    typedText = "";
 
-    for (let i = 0; i < text.length; i++) {
+    for (let i = 0; i < targetText.length; i++) {
         const character = document.createElement("span");
 
         character.className = "character";
-        character.textContent = text[i];
+        character.textContent = targetText[i];
 
-        if (text[i] === " ") {
+        if (targetText[i] === " ") {
             character.classList.add("space");
         }
 
         typingText.appendChild(character);
     }
 
-    updateCaret();
+    updateDisplay();
 }
 
-function updateCaret() {
-    const characters = document.querySelectorAll(".character");
+function updateDisplay() {
+    const characters = typingText.querySelectorAll(".character");
 
-    characters.forEach(character => {
+    characters.forEach((character, index) => {
+        character.classList.remove("correct");
+        character.classList.remove("incorrect");
         character.classList.remove("current");
+
+        if (index < typedText.length) {
+            if (typedText[index] === targetText[index]) {
+                character.classList.add("correct");
+            } else {
+                character.classList.add("incorrect");
+            }
+        }
     });
 
-    if (characters[currentPosition]) {
-        characters[currentPosition].classList.add("current");
+    if (typedText.length < characters.length) {
+        characters[typedText.length].classList.add("current");
 
-        characters[currentPosition].scrollIntoView({
+        characters[typedText.length].scrollIntoView({
             behavior: "smooth",
             block: "nearest"
         });
     }
 }
 
+function startTest() {
+    if (started || finished) {
+        return;
+    }
+
+    started = true;
+    startTime = Date.now();
+
+    if (currentMode === "time") {
+        startTimer();
+    } else {
+        startTimer();
+    }
+}
+
 function startTimer() {
-    if (timer) return;
+    if (timer) {
+        return;
+    }
 
     timer = setInterval(() => {
-        timeLeft--;
+        if (!started || finished) {
+            return;
+        }
 
-        timerDisplay.textContent = timeLeft;
+        elapsedSeconds = Math.floor(
+            (Date.now() - startTime) / 1000
+        );
+
+        if (currentMode === "time") {
+            timeLeftUpdate();
+        }
 
         updateStats();
 
-        if (timeLeft <= 0) {
-            finishTest();
+        if (currentMode === "words") {
+            if (typedText.length >= targetText.length) {
+                finishTest();
+            }
         }
-    }, 1000);
+    }, 100);
 }
 
-function handleInput(event) {
-    if (finished) return;
+function timeLeftUpdate() {
+    const remaining = Math.max(
+        0,
+        selectedTime - elapsedSeconds
+    );
 
-    if (!started) {
-        started = true;
-        startTimer();
-    }
+    timerDisplay.textContent = remaining;
 
-    const typedValue = typingInput.value;
-
-    const newCharacterCount = typedValue.length - currentPosition;
-
-    if (newCharacterCount <= 0) {
-        currentPosition = typedValue.length;
-        updateCaret();
-        return;
-    }
-
-    const typedCharacter =
-        typedValue[typedValue.length - 1];
-
-    const characters =
-        document.querySelectorAll(".character");
-
-    const targetCharacter =
-        characters[currentPosition];
-
-    if (!targetCharacter) {
+    if (remaining <= 0) {
         finishTest();
+    }
+}
+
+function handleInput() {
+    if (finished) {
         return;
     }
 
-    totalTyped++;
+    const newValue = typingInput.value;
 
-    if (typedCharacter === targetCharacter.textContent) {
-        targetCharacter.classList.remove("incorrect");
-        targetCharacter.classList.add("correct");
-
-        correctTyped++;
-    } else {
-        targetCharacter.classList.remove("correct");
-        targetCharacter.classList.add("incorrect");
-
-        errors++;
+    if (!started && newValue.length > 0) {
+        startTest();
     }
 
-    currentPosition++;
-
-    updateCaret();
-    updateStats();
-
-    typingInput.value = "";
-}
-
-function handleBackspace(event) {
-    if (event.key !== "Backspace") return;
-
-    event.preventDefault();
-
-    if (currentPosition <= 0) return;
-
-    const characters =
-        document.querySelectorAll(".character");
-
-    currentPosition--;
-
-    const character = characters[currentPosition];
-
-    if (character.classList.contains("correct")) {
-        correctTyped--;
+    if (newValue.length > targetText.length) {
+        typingInput.value = typedText;
+        return;
     }
+
+    typedText = newValue;
+
+    calculateStats();
+    updateDisplay();
 
     if (
-        character.classList.contains("correct") ||
-        character.classList.contains("incorrect")
+        currentMode === "words" &&
+        typedText.length >= targetText.length
     ) {
-        totalTyped--;
+        finishTest();
     }
+}
 
-    if (character.classList.contains("incorrect")) {
-        errors--;
+function calculateStats() {
+    totalTyped = typedText.length;
+    correctTyped = 0;
+    errors = 0;
+
+    for (let i = 0; i < typedText.length; i++) {
+        if (typedText[i] === targetText[i]) {
+            correctTyped++;
+        } else {
+            errors++;
+        }
     }
-
-    character.classList.remove("correct");
-    character.classList.remove("incorrect");
-
-    updateCaret();
-    updateStats();
 }
 
 function updateStats() {
-    const elapsedSeconds =
-        Math.max(1, selectedTime - timeLeft);
+    calculateStats();
 
-    const minutes = elapsedSeconds / 60;
+    const currentElapsed = Math.max(
+        1,
+        currentMode === "time"
+            ? elapsedSeconds
+            : Math.floor((Date.now() - startTime) / 1000)
+    );
+
+    const minutes = currentElapsed / 60;
 
     const wpm = Math.round(
         (correctTyped / 5) / minutes
@@ -222,19 +234,26 @@ function updateStats() {
 }
 
 function finishTest() {
-    if (finished) return;
+    if (finished) {
+        return;
+    }
 
     finished = true;
+    started = false;
 
     clearInterval(timer);
     timer = null;
 
-    typingInput.blur();
+    calculateStats();
 
-    const elapsedSeconds =
-        Math.max(1, selectedTime - timeLeft);
+    const finalElapsed = Math.max(
+        1,
+        currentMode === "time"
+            ? Math.min(elapsedSeconds, selectedTime)
+            : Math.floor((Date.now() - startTime) / 1000)
+    );
 
-    const minutes = elapsedSeconds / 60;
+    const minutes = finalElapsed / 60;
 
     const finalWpm = Math.round(
         (correctTyped / 5) / minutes
@@ -249,19 +268,27 @@ function finishTest() {
     resultCharacters.textContent = totalTyped;
     resultErrors.textContent = errors;
 
+    wpmDisplay.textContent = Math.max(0, finalWpm);
+    accuracyDisplay.textContent = `${finalAccuracy}%`;
+
     result.classList.remove("hidden");
+
+    typingInput.blur();
 }
 
 function resetTest() {
     clearInterval(timer);
 
     timer = null;
-    timeLeft = selectedTime;
+    startTime = null;
 
     started = false;
     finished = false;
 
-    currentPosition = 0;
+    elapsedSeconds = 0;
+
+    typedText = "";
+
     totalTyped = 0;
     correctTyped = 0;
     errors = 0;
@@ -276,7 +303,9 @@ function resetTest() {
 
     generateText();
 
-    typingInput.focus();
+    requestAnimationFrame(() => {
+        typingInput.focus();
+    });
 }
 
 function setActiveButton(buttons, selectedButton) {
@@ -296,9 +325,11 @@ modeButtons.forEach(button => {
         if (currentMode === "time") {
             timeOptions.classList.remove("hidden");
             wordOptions.classList.add("hidden");
+            timerDisplay.textContent = selectedTime;
         } else {
             timeOptions.classList.add("hidden");
             wordOptions.classList.remove("hidden");
+            timerDisplay.textContent = "0";
         }
 
         resetTest();
@@ -311,7 +342,9 @@ timeButtons.forEach(button => {
 
         setActiveButton(timeButtons, button);
 
-        resetTest();
+        if (currentMode === "time") {
+            resetTest();
+        }
     });
 });
 
@@ -321,34 +354,47 @@ wordButtons.forEach(button => {
 
         setActiveButton(wordButtons, button);
 
-        resetTest();
+        if (currentMode === "words") {
+            resetTest();
+        }
     });
 });
 
 typingInput.addEventListener("input", handleInput);
 
-typingInput.addEventListener("keydown", handleBackspace);
-
 typingText.addEventListener("click", () => {
-    typingInput.focus();
+    if (!finished) {
+        typingInput.focus();
+    }
+});
+
+typingText.addEventListener("mousedown", event => {
+    event.preventDefault();
 });
 
 document.addEventListener("keydown", event => {
+    if (event.key === "Tab") {
+        event.preventDefault();
+        return;
+    }
+
     if (
         event.key.length === 1 ||
         event.key === "Backspace"
     ) {
-        typingInput.focus();
-    }
-
-    if (event.key === "Tab") {
-        event.preventDefault();
+        if (!finished) {
+            typingInput.focus();
+        }
     }
 });
 
-restartButton.addEventListener("click", resetTest);
+restartButton.addEventListener("click", () => {
+    resetTest();
+});
 
-tryAgainButton.addEventListener("click", resetTest);
+tryAgainButton.addEventListener("click", () => {
+    resetTest();
+});
 
 generateText();
 typingInput.focus();
