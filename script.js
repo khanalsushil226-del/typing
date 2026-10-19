@@ -87,9 +87,11 @@ function updateDisplay() {
     const characters = typingText.querySelectorAll(".character");
 
     characters.forEach((character, index) => {
-        character.classList.remove("correct");
-        character.classList.remove("incorrect");
-        character.classList.remove("current");
+        character.classList.remove(
+            "correct",
+            "incorrect",
+            "current"
+        );
 
         if (index < typedText.length) {
             if (typedText[index] === targetText[index]) {
@@ -100,7 +102,10 @@ function updateDisplay() {
         }
     });
 
-    if (typedText.length < characters.length) {
+    if (
+        typedText.length < characters.length &&
+        characters[typedText.length]
+    ) {
         characters[typedText.length].classList.add("current");
 
         characters[typedText.length].scrollIntoView({
@@ -118,11 +123,7 @@ function startTest() {
     started = true;
     startTime = Date.now();
 
-    if (currentMode === "time") {
-        startTimer();
-    } else {
-        startTimer();
-    }
+    startTimer();
 }
 
 function startTimer() {
@@ -140,30 +141,32 @@ function startTimer() {
         );
 
         if (currentMode === "time") {
-            timeLeftUpdate();
+            const remaining = Math.max(
+                0,
+                selectedTime - elapsedSeconds
+            );
+
+            timerDisplay.textContent = remaining;
+
+            if (remaining <= 0) {
+                finishTest();
+                return;
+            }
+        } else {
+            timerDisplay.textContent = formatTime(elapsedSeconds);
         }
 
         updateStats();
-
-        if (currentMode === "words") {
-            if (typedText.length >= targetText.length) {
-                finishTest();
-            }
-        }
     }, 100);
 }
 
-function timeLeftUpdate() {
-    const remaining = Math.max(
-        0,
-        selectedTime - elapsedSeconds
-    );
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
 
-    timerDisplay.textContent = remaining;
-
-    if (remaining <= 0) {
-        finishTest();
-    }
+    return `${minutes}:${remainingSeconds
+        .toString()
+        .padStart(2, "0")}`;
 }
 
 function handleInput() {
@@ -212,11 +215,13 @@ function calculateStats() {
 function updateStats() {
     calculateStats();
 
+    if (!started || !startTime) {
+        return;
+    }
+
     const currentElapsed = Math.max(
         1,
-        currentMode === "time"
-            ? elapsedSeconds
-            : Math.floor((Date.now() - startTime) / 1000)
+        Math.floor((Date.now() - startTime) / 1000)
     );
 
     const minutes = currentElapsed / 60;
@@ -295,7 +300,12 @@ function resetTest() {
 
     typingInput.value = "";
 
-    timerDisplay.textContent = selectedTime;
+    if (currentMode === "time") {
+        timerDisplay.textContent = selectedTime;
+    } else {
+        timerDisplay.textContent = "0:00";
+    }
+
     wpmDisplay.textContent = "0";
     accuracyDisplay.textContent = "100%";
 
@@ -325,11 +335,9 @@ modeButtons.forEach(button => {
         if (currentMode === "time") {
             timeOptions.classList.remove("hidden");
             wordOptions.classList.add("hidden");
-            timerDisplay.textContent = selectedTime;
         } else {
             timeOptions.classList.add("hidden");
             wordOptions.classList.remove("hidden");
-            timerDisplay.textContent = "0";
         }
 
         resetTest();
@@ -342,9 +350,7 @@ timeButtons.forEach(button => {
 
         setActiveButton(timeButtons, button);
 
-        if (currentMode === "time") {
-            resetTest();
-        }
+        resetTest();
     });
 });
 
@@ -354,9 +360,7 @@ wordButtons.forEach(button => {
 
         setActiveButton(wordButtons, button);
 
-        if (currentMode === "words") {
-            resetTest();
-        }
+        resetTest();
     });
 });
 
@@ -375,6 +379,22 @@ typingText.addEventListener("mousedown", event => {
 document.addEventListener("keydown", event => {
     if (event.key === "Tab") {
         event.preventDefault();
+        resetTest();
+        return;
+    }
+
+    if (event.key === "Escape") {
+        event.preventDefault();
+        resetTest();
+        return;
+    }
+
+    if (
+        event.key === "Enter" &&
+        finished
+    ) {
+        event.preventDefault();
+        resetTest();
         return;
     }
 
