@@ -1,3 +1,7 @@
+const resultRawWpm = document.getElementById("resultRawWpm");
+const resultCorrect = document.getElementById("resultCorrect");
+const resultTime = document.getElementById("resultTime");
+const resultMode = document.getElementById("resultMode");
 const typingInput = document.getElementById("typingInput");
 const typingText = document.getElementById("typingText");
 const timerDisplay = document.getElementById("timer");
