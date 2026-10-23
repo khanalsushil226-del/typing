@@ -294,6 +294,32 @@ function finishTest() {
     wpmDisplay.textContent = Math.max(0, finalWpm);
     accuracyDisplay.textContent = `${finalAccuracy}%`;
 
+    const testResult = {
+        wpm: Math.max(0, finalWpm),
+        rawWpm: Math.max(0, rawWpm),
+        accuracy: finalAccuracy,
+        characters: totalTyped,
+        correct: correctTyped,
+        errors: errors,
+        time: finalElapsed,
+        mode: currentMode,
+        setting: currentMode === "time"
+            ? `${selectedTime}s`
+            : `${selectedWordCount} words`,
+        date: new Date().toISOString()
+    };
+
+    const history = JSON.parse(
+        localStorage.getItem("typingHistory") || "[]"
+    );
+
+    history.push(testResult);
+
+    localStorage.setItem(
+        "typingHistory",
+        JSON.stringify(history)
+    );
+
     result.classList.remove("hidden");
 
     typingInput.blur();
