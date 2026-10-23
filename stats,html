@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing - Stats</title>
+    <link rel="stylesheet" href="stats.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">Typing</div>
+
+        <nav class="nav">
+            <a href="index.html" class="nav-link">Test</a>
+            <a href="stats.html" class="nav-link active">Stats</a>
+            <a href="#" class="nav-link">Themes</a>
+        </nav>
+
+        <div class="header-actions">
+            <button class="icon-button" id="settingsButton">⚙</button>
+            <button class="icon-button" id="accountButton">●</button>
+        </div>
+    </header>
+
+    <main class="stats-page">
+
+        <section class="stats-header">
+            <span class="stats-label">YOUR PERFORMANCE</span>
+            <h1>Typing Statistics</h1>
+            <p>Track your progress and see how your typing improves over time.</p>
+        </section>
+
+        <section class="overview">
+
+            <div class="overview-card">
+                <span>Tests Completed</span>
+                <strong id="testsCompleted">0</strong>
+            </div>
+
+            <div class="overview-card">
+                <span>Average WPM</span>
+                <strong id="averageWpm">0</strong>
+            </div>
+
+            <div class="overview-card">
+                <span>Best WPM</span>
+                <strong id="bestWpm">0</strong>
+            </div>
+
+            <div class="overview-card">
+                <span>Average Accuracy</span>
+                <strong id="averageAccuracy">0%</strong>
+            </div>
+
+            <div class="overview-card">
+                <span>Best Accuracy</span>
+                <strong id="bestAccuracy">0%</strong>
+            </div>
+
+            <div class="overview-card">
+                <span>Total Characters</span>
+                <strong id="totalCharacters">0</strong>
+            </div>
+
+        </section>
+
+        <section class="history-section">
+
+            <div class="section-header">
+                <div>
+                    <span class="section-label">HISTORY</span>
+                    <h2>Recent Tests</h2>
+                </div>
+
+                <button class="clear-button" id="clearStatsButton">
+                    Clear Stats
+                </button>
+            </div>
+
+            <div class="history-table">
+
+                <div class="history-row history-head">
+                    <span>WPM</span>
+                    <span>Accuracy</span>
+                    <span>Raw WPM</span>
+                    <span>Time</span>
+                    <span>Mode</span>
+                    <span>Date</span>
+                </div>
+
+                <div id="historyList"></div>
+
+            </div>
+
+            <div class="empty-state hidden" id="emptyState">
+                <h3>No tests yet</h3>
+                <p>Complete your first typing test to see your statistics here.</p>
+                <a href="index.html">Start Typing</a>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <span>Typing</span>
+        <span>Keep practicing.</span>
+    </footer>
+
+    <script src="stats.js"></script>
+
+</body>
+</html>
