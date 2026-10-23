@@ -268,14 +268,28 @@ function finishTest() {
         (correctTyped / 5) / minutes
     );
 
+    const rawWpm = Math.round(
+        (totalTyped / 5) / minutes
+    );
+
     const finalAccuracy = totalTyped > 0
         ? Math.round((correctTyped / totalTyped) * 100)
         : 100;
 
     resultWpm.textContent = Math.max(0, finalWpm);
     resultAccuracy.textContent = `${finalAccuracy}%`;
+
+    resultRawWpm.textContent = Math.max(0, rawWpm);
     resultCharacters.textContent = totalTyped;
+    resultCorrect.textContent = correctTyped;
     resultErrors.textContent = errors;
+
+    resultTime.textContent = formatTime(finalElapsed);
+
+    resultMode.textContent =
+        currentMode === "time"
+            ? `${selectedTime}s`
+            : `${selectedWordCount} words`;
 
     wpmDisplay.textContent = Math.max(0, finalWpm);
     accuracyDisplay.textContent = `${finalAccuracy}%`;
